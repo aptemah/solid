@@ -11968,66 +11968,6 @@ var requirejs, _require, define;
     req(cfg);
 })(undefined, typeof setTimeout === 'undefined' ? undefined : setTimeout);
 "use strict";
-
-function Event(name) {
-    this._handlers = [];
-    this.name = name;
-}
-
-// Функция добавления обработчика события
-Event.prototype.addHandler = function (handler) {
-    this._handlers.push(handler);
-};
-
-// Функция удаления обработчика события
-Event.prototype.removeHandler = function (handler) {
-    for (var i = 0; i < handlers.length; i++) {
-        if (this._handlers[i] == handler) {
-            this._handlers.splice(i, 1);
-            break;
-        }
-    }
-};
-
-// Срабатывание события (выполнение всех связанных обработчиков)
-Event.prototype.fire = function (eventArgs) {
-    this._handlers.forEach(function (h) {
-        h(eventArgs);
-    });
-};
-
-var eventAggregator = function () {
-    var events = [];
-
-    function getEvent(eventName) {
-        return $.grep(events, function (event) {
-            return event.name === eventName;
-        })[0];
-    }
-
-    return {
-        publish: function publish(eventName, eventArgs) {
-            var event = getEvent(eventName);
-
-            if (!event) {
-                event = new Event(eventName);
-                events.push(event);
-            }
-            event.fire(eventArgs);
-        },
-
-        subscribe: function subscribe(eventName, handler) {
-            var event = getEvent(eventName);
-
-            if (!event) {
-                event = new Event(eventName);
-                events.push(event);
-            }
-
-            event.addHandler(handler);
-        }
-    };
-}();
 'use strict';
 
 $(function () {
@@ -12044,7 +11984,7 @@ $(function () {
              * после добавления элемента в корзину публикуем событие   
              * itemAdded
              */
-            eventAggregator.publish("itemAdded", item);
+            document.dispatchEvent(new CustomEvent('itemAdded', { 'detail': { item: item } }));
         };
     }
 
@@ -12056,9 +11996,9 @@ $(function () {
          * представление корзины подписано на событие itemAdded
          * и при наступлении этого события - отображает новый элемент
          */
-        eventAggregator.subscribe('itemAdded', function (eventArgs) {
-            var newItem = $('<li></li>').html(eventArgs.getDescription()).attr('id-cart', eventArgs.getId()).appendTo('#cart');
-        });
+        document.addEventListener('itemAdded', function (e) {
+            var newItem = $('<li></li>').html(e.detail.item.getDescription()).attr('id-cart', e.detail.item.getId()).appendTo('#cart');
+        }, false);
     }();
 
     /**
@@ -12066,9 +12006,9 @@ $(function () {
      * и добавляет выбранный продукт в корзину
      */
     var cartController = function (cart) {
-        eventAggregator.subscribe('productSelected', function (eventArgs) {
-            cart.addItem(eventArgs.product);
-        });
+        document.addEventListener('productSelected', function (e) {
+            cart.addItem(e.detail.product);
+        }, false);
     }(new Cart());
 
     /**
@@ -12094,9 +12034,7 @@ $(function () {
             var product = $.grep(products, function (x) {
                 return x.getId() == productId;
             })[0];
-            eventAggregator.publish('productSelected', {
-                product: product
-            });
+            document.dispatchEvent(new CustomEvent('productSelected', { 'detail': { 'product': product } }));
         }
 
         products.forEach(function (product) {

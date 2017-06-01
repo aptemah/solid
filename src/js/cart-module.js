@@ -12,7 +12,9 @@ $(function(){
              * после добавления элемента в корзину публикуем событие   
              * itemAdded
              */
-            eventAggregator.publish("itemAdded", item);
+            document.dispatchEvent(new CustomEvent('itemAdded', {
+                'detail': {item : item}
+            }));
         };
     }
 
@@ -24,12 +26,12 @@ $(function(){
          * представление корзины подписано на событие itemAdded
          * и при наступлении этого события - отображает новый элемент
          */
-        eventAggregator.subscribe('itemAdded', function(eventArgs) {
+         document.addEventListener('itemAdded', function (e) {
             var newItem = $('<li></li>')
-                .html(eventArgs.getDescription())
-                .attr('id-cart', eventArgs.getId())
+                .html(e.detail.item.getDescription())
+                .attr('id-cart', e.detail.item.getId())
                 .appendTo('#cart');
-        });
+         }, false);
     })();
 
     /**
@@ -37,9 +39,9 @@ $(function(){
      * и добавляет выбранный продукт в корзину
      */
     var cartController = (function(cart) {
-        eventAggregator.subscribe('productSelected', function(eventArgs) {
-            cart.addItem(eventArgs.product);
-        });
+        document.addEventListener('productSelected', function (e) {
+           cart.addItem(e.detail.product);
+        }, false);
     })(new Cart());
 
     /**
@@ -69,9 +71,9 @@ $(function(){
             var product = $.grep(products, function(x) {
                 return x.getId() == productId;
             })[0];
-            eventAggregator.publish('productSelected', {
-                product: product
-            });
+            document.dispatchEvent(new CustomEvent('productSelected', {
+                'detail': {'product' : product}
+            }));
         }
 
         products.forEach(function(product) {
